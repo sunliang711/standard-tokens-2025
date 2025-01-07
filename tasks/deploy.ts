@@ -40,6 +40,7 @@ task("contract:deploy", "Deploy a contract with constructor arguments")
     )
     .addParam("account", "The account index to use for deployment", 0, types.int)
     .addFlag("noconfirm", "Skip deployment confirmation")
+    .addFlag("noverify", "Skip contract verification")
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         try {
             // Compile contracts
@@ -81,6 +82,21 @@ task("contract:deploy", "Deploy a contract with constructor arguments")
                 console.warn("\nWarning: Failed to estimate gas", error);
             }
 
+            const gasPrice = await hre.ethers.provider.getFeeData();
+            console.log("\nGAS INFORMATION");
+            console.log("===============");
+            console.log(`Gas Price: ${hre.ethers.formatUnits(gasPrice.gasPrice ?? 0, 'gwei')} gwei`);
+            if (gasPrice.maxFeePerGas) {
+                console.log(`Max Fee Per Gas: ${hre.ethers.formatUnits(gasPrice.maxFeePerGas, 'gwei')} gwei`);
+                console.log(`Max Priority Fee Per Gas: ${hre.ethers.formatUnits(gasPrice.maxPriorityFeePerGas ?? 0, 'gwei')} gwei`);
+            }
+
+            // If you want to estimate total cost (after getting estimatedGas)
+            if (estimatedGas && gasPrice.gasPrice) {
+                const estimatedCost = estimatedGas * gasPrice.gasPrice;
+                console.log(`Estimated Cost: ${hre.ethers.formatEther(estimatedCost)} ETH`);
+            }
+
             // Ask for confirmation unless --noconfirm is set
             const confirmed = await confirmDeployment(
                 "\nDo you want to proceed with the deployment?",
@@ -107,20 +123,25 @@ task("contract:deploy", "Deploy a contract with constructor arguments")
 
             // Verify source code if not on local network
             const networkName = hre.network.name;
-            if (networkName !== "hardhat" && networkName !== "localhost") {
-                console.log("\nWaiting for block confirmations...");
-                // Wait for 5 block confirmations
-                await contract.deploymentTransaction()?.wait(5);
+            if (!taskArgs.noverify) {
+                if (networkName !== "hardhat" && networkName !== "localhost") {
+                    const blockConfirmation = 5;
+                    console.log(`\nWaiting for ${blockConfirmation} block confirmations...`);
+                    // Wait for block confirmations
+                    await contract.deploymentTransaction()?.wait(blockConfirmation);
 
-                console.log("Starting contract verification...");
-                try {
-                    await hre.run("verify:verify", {
-                        address: address,
-                        constructorArguments: taskArgs.constructorArgs,
-                    });
-                    console.log("Contract verified successfully");
-                } catch (error) {
-                    console.log("Verification failed:", error);
+                    console.log("Starting contract verification...");
+                    try {
+                        await hre.run("verify:verify", {
+                            address: address,
+                            constructorArguments: taskArgs.constructorArgs,
+                        });
+                        console.log("Contract verified successfully");
+                    } catch (error) {
+                        console.log("Verification failed:", error);
+                    }
+                } else {
+                    console.log("Skipping contract verification for local network");
                 }
             }
 

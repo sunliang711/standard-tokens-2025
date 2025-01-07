@@ -93,6 +93,21 @@ task("contract:write", "Execute a write method on a smart contract")
                 console.warn("\nWarning: Failed to estimate gas. The transaction might fail.", error);
             }
 
+            const gasPrice = await hre.ethers.provider.getFeeData();
+            console.log("\nGAS INFORMATION");
+            console.log("===============");
+            console.log(`Gas Price: ${hre.ethers.formatUnits(gasPrice.gasPrice ?? 0, 'gwei')} gwei`);
+            if (gasPrice.maxFeePerGas) {
+                console.log(`Max Fee Per Gas: ${hre.ethers.formatUnits(gasPrice.maxFeePerGas, 'gwei')} gwei`);
+                console.log(`Max Priority Fee Per Gas: ${hre.ethers.formatUnits(gasPrice.maxPriorityFeePerGas ?? 0, 'gwei')} gwei`);
+            }
+
+            // If you want to estimate total cost (after getting estimatedGas)
+            if (estimatedGas && gasPrice.gasPrice) {
+                const estimatedCost = estimatedGas * gasPrice.gasPrice;
+                console.log(`Estimated Cost: ${hre.ethers.formatEther(estimatedCost)} ETH`);
+            }
+
             // Ask for confirmation unless --noconfirm is set
             const confirmed = await confirmTransaction(
                 "\nDo you want to proceed with the transaction?",
