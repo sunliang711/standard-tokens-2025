@@ -41,6 +41,7 @@ task("contract:deploy", "Deploy a contract with constructor arguments")
     .addParam("account", "The account index to use for deployment", 0, types.int)
     .addFlag("noconfirm", "Skip deployment confirmation")
     .addFlag("noverify", "Skip contract verification")
+    .addParam("confirmations", "Number of block confirmations to wait for", 5, types.int)
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         try {
             // Compile contracts
@@ -125,7 +126,7 @@ task("contract:deploy", "Deploy a contract with constructor arguments")
             const networkName = hre.network.name;
             if (!taskArgs.noverify) {
                 if (networkName !== "hardhat" && networkName !== "localhost") {
-                    const blockConfirmation = 5;
+                    const blockConfirmation = taskArgs.confirmations;
                     console.log(`\nWaiting for ${blockConfirmation} block confirmations...`);
                     // Wait for block confirmations
                     await contract.deploymentTransaction()?.wait(blockConfirmation);

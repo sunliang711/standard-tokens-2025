@@ -1,8 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import cfg from "./private";
-import "./tasks/deploy";
-import "./tasks/write";
+import "./tasks/contractDeploy";
+import "./tasks/contractWrite";
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
