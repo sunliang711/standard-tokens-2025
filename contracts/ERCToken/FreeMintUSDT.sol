@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract USDT is ERC20 {
+contract FreeMintUSDT is ERC20 {
     constructor() ERC20("USDT", "USDT") {}
 
     function mint(uint256 amount) public {
