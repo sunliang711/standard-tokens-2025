@@ -1,6 +1,7 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as readline from "readline";
+import { types } from "hardhat/config";
 
 // Helper function for confirmation prompt
 const confirmDeployment = async (message: string, skipConfirmation: boolean): Promise<boolean> => {
